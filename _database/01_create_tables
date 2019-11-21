@@ -11,13 +11,12 @@ CREATE TABLE fa_scrape
 CREATE TABLE artists
 (
     id SERIAL PRIMARY KEY NOT NULL,
-    artist_id INT,
     artist_name  TEXT,
     follows  BOOL,
     artist_full_path      TEXT,
     artist_twitter    TEXT,
     artist_telegram    TEXT,
     artist_active BOOL,
-    created_on TIMESTAMP NOT NULL,
+    created_on timestamptz NOT NULL DEFAULT now(),
     updated_on TIMESTAMP
 )

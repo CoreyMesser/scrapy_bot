@@ -1,34 +1,24 @@
 from app.models import FaScrape, Artist
-from sqlalchemy import create_engine
-from sqlalchemy_utils import database_exists, create_database
-from sqlalchemy.orm import sessionmaker
 from app.constants import EnvConstants as ec
 from datetime import datetime
+from app.database import db_session
 
 
-class DBConnection(object):
+class DBServices(object):
 
-    engine = create_engine("postgres://localhost/rndrols")
-    if not database_exists(engine.url):
-        create_database(engine.url)
-
-    print(database_exists(engine.url))
-    conn = engine.connect()
-    db_session = sessionmaker(bind=engine)
-
-
-
-
-class DBServices(DBConnection):
-
-    def db_update_artists_names(self, names_dict):
-        db = DBConnection().db_session()
+    def db_add_artists_names(self, names_dict):
+        db = db_session()
         art = Artist()
         for art_entry in names_dict:
-            art.artist_name = art_entry['user_name']
-            art.follows = True
-            art.artist_full_path = ec.TARGET_SITE + '/' + ec.PATH_USER + art_entry['user_path']
-            art.created_on = datetime.now()
-            db.add(art)
+            user_name = art_entry['user_name']
+            artist_full_path = art_entry['user_path']
+            db.execute("""
+            INSERT INTO public.artists (artist_name, follows, artist_full_path)
+            VALUES ( '{}',{},'{}' )""".format(user_name, True, artist_full_path))
             db.commit()
 
+    def db_get_artist(self):
+        pass
+
+    def db_update_artist_info(self):
+        pass

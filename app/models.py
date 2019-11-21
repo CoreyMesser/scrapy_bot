@@ -9,7 +9,6 @@ class Artist(Base):
     __tablename__ = 'artists'
 
     id = Column(Integer, primary_key=True, server_default=text("nextval('artists_id_seq'::regclass)"))
-    artist_id = Column(Integer)
     artist_name = Column(Text)
     follows = Column(Boolean)
     artist_full_path = Column(Text)

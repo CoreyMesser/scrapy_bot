@@ -10,5 +10,5 @@ if __name__ == '__main__':
     print('Scrape Started')
     watch_list = wl.soup_parser()
     names_dict = wl.soup_dict(watch_list=watch_list)
-    ds.db_update_artists_names(names_dict=names_dict)
+    ds.db_add_artists_names(names_dict=names_dict)
     print('FIN')
