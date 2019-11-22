@@ -17,9 +17,17 @@ class Processors(object):
 
     def login(self):
         a = Auth()
-        a.__init__()
+        if a.check_login() == False:
+            session = a.login()
+            a.check_login()
+        else:
+            session = a.session
+
+    def social_update(self):
+        ds = DBServices()
+
 
 
 if __name__ == '__main__':
     p = Processors()
-    p.initial_add_artists()
+    p.login()

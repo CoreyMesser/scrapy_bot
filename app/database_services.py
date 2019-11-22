@@ -8,7 +8,6 @@ class DBServices(object):
 
     def db_add_artists_names(self, names_dict):
         db = db_session()
-        art = Artist()
         for art_entry in names_dict:
             user_name = art_entry['user_name']
             artist_full_path = art_entry['user_path']
@@ -17,8 +16,21 @@ class DBServices(object):
             VALUES ( '{}',{},'{}' )""".format(user_name, True, artist_full_path))
             db.commit()
 
-    def db_get_artist(self):
-        pass
+    def db_get_artists(self):
+        db = db_session()
+        artist_list = db.execute("""
+        SELECT artist_full_path FROM public.artists
+        """)
+        return artist_list
 
-    def db_update_artist_info(self):
-        pass
+    def db_update_artist_info(self, art_dict):
+        db = db_session()
+        db.execute("""
+        INSERT INTO public.artists (artist_active, artist_telegram, artist_twitter, updated_on)
+        VALUES ( {}, '{}', '{}', {})
+        WHERE artist_full_path = {}""".format(art_dict['active'],
+                                              art_dict['telegram'],
+                                              art_dict['twitter'],
+                                              datetime.now(tz=False),
+                                              art_dict['full_path']))
+        db.commit()
