@@ -73,16 +73,53 @@ class WatchList(scrapy.Spider):
 
 
 class ArtistInfo(scrapy.Spider):
+    name = "watchers"
 
     #db passes in path to assemble path
 
-    def asemble_path(self, path):
-        return ec.TARGET_SITE + '/' + ec.PATH_USER + path
+    def assemble_path(self, user):
+        return ec.TARGET_SITE + '/' + user
 
-    def artist_soup_parser(self):
-        social_list = []
-        #calls wl.cfscrape
-        req = self.cf_scrape(path=path)
-        soup = BeautifulSoup(req.content, 'html.parser')
-        social_list.append(list(soup.find("a", href=re.compile("http://www.twitter.com/"))))
-        social_list.append(list(soup.find("a", href=re.compile("https://t.me/"))))
+    def unwatch_user(self, session, response):
+        soup = BeautifulSoup(response.text, "html.parser")
+        unwatch_link = soup.find_all("a", href=re.compile("/unwatch/"))
+        session.get(unwatch_link.attrs['href'])
+
+    def user_active(self, session, response):
+        soup = BeautifulSoup(response.text, "html.parser")
+        user_check = soup.title.string
+        if user_check == ec.ACC_DISABLED:
+            user_active = False
+            # self.unwatch_user(session=session, response=response)
+        else:
+            user_active = True
+        return user_active
+
+    def artist_soup_parser(self, response):
+        soup = BeautifulSoup(response.content, 'html.parser')
+        try:
+            tw_link = soup.find("a", href=re.compile("http://www.twitter.com/"))
+            twitter_link = tw_link.attrs['href']
+        except:
+            twitter_link = None
+        try:
+            tel_link = soup.find("a", href=re.compile("https://t.me/"))
+            telegram_link = tel_link.attrs['href']
+        except:
+            telegram_link = None
+        return telegram_link, twitter_link
+
+    def artist_processor(self, session, user):
+        user_dict = {}
+        user_dict['full_path'] = user[0]
+        path = self.assemble_path(user=user_dict['full_path'])
+        response = session.get(url=path)
+        user_dict['active'] = self.user_active(session=session, response=response)
+        telegram, twitter = self.artist_soup_parser(response=response)
+        user_dict['telegram'] = telegram
+        user_dict['twitter'] = twitter
+        return user_dict
+
+
+
+

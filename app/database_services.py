@@ -2,6 +2,7 @@ from app.models import FaScrape, Artist
 from app.constants import EnvConstants as ec
 from datetime import datetime
 from app.database import db_session
+from sqlalchemy.sql import func
 
 
 class DBServices(object):
@@ -23,14 +24,18 @@ class DBServices(object):
         """)
         return artist_list
 
-    def db_update_artist_info(self, art_dict):
+    def db_update_artist_info(self, user_dict):
+        updated_on = datetime.now()
         db = db_session()
         db.execute("""
-        INSERT INTO public.artists (artist_active, artist_telegram, artist_twitter, updated_on)
-        VALUES ( {}, '{}', '{}', {})
-        WHERE artist_full_path = {}""".format(art_dict['active'],
-                                              art_dict['telegram'],
-                                              art_dict['twitter'],
-                                              datetime.now(tz=False),
-                                              art_dict['full_path']))
+        UPDATE public.artists 
+        SET artist_active = {}, 
+        artist_telegram = '{}', 
+        artist_twitter = '{}', 
+        updated_on = now()
+        WHERE artist_full_path = '{}'
+        """.format(user_dict['active'],
+                   user_dict['telegram'],
+                   user_dict['twitter'],
+                   user_dict['full_path']))
         db.commit()

@@ -12,3 +12,4 @@ class EnvConstants(object):
     CF_B = os.environ.get('CF_B')
     CF_A = os.environ.get('CF_A')
     HEADERS = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:70.0) Gecko/20100101 Firefox/70.0'
+    ACC_DISABLED = os.environ.get('ACC_DISABLED')

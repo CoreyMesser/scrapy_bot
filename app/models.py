@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, Text, text, Boolean, DateTime
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql import func
 
 Base = declarative_base()
 metadata = Base.metadata
@@ -16,7 +17,7 @@ class Artist(Base):
     artist_telegram = Column(Text)
     artist_active = Column(Boolean)
     created_on = Column(DateTime, nullable=False)
-    updated_on = Column(DateTime)
+    updated_on = Column((DateTime), onupdate=func.now())
 
 
 class FaScrape(Base):
