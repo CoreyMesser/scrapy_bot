@@ -1,8 +1,5 @@
-from app.models import FaScrape, Artist
-from app.constants import EnvConstants as ec
 from datetime import datetime
 from app.database import db_session
-from sqlalchemy.sql import func
 
 
 class DBServices(object):

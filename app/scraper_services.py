@@ -1,10 +1,8 @@
 import scrapy
-import os
 import cfscrape
 import requests
 import re
 from bs4 import BeautifulSoup
-import html.parser
 
 from app.constants import EnvConstants as ec
 
@@ -35,7 +33,6 @@ class WatchList(scrapy.Spider):
 
     def cf_get_tokens(self):
         dblist = 'dblist_sql'
-        # pull tokens from DB
         if dblist:
             sql = 'sql'
         else:
@@ -74,8 +71,6 @@ class WatchList(scrapy.Spider):
 
 class ArtistInfo(scrapy.Spider):
     name = "watchers"
-
-    #db passes in path to assemble path
 
     def assemble_path(self, user):
         return ec.TARGET_SITE + '/' + user
@@ -119,7 +114,3 @@ class ArtistInfo(scrapy.Spider):
         user_dict['telegram'] = telegram
         user_dict['twitter'] = twitter
         return user_dict
-
-
-
-

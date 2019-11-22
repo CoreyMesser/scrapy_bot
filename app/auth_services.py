@@ -1,12 +1,7 @@
 import requests
-from requests import session
-
-from http import cookiejar
-from http.cookiejar import Cookie
 
 import cfscrape
 import bs4
-from lxml import html
 
 from app.constants import EnvConstants as ec
 
