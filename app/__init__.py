@@ -1,6 +1,7 @@
 from app.scraper_services import WatchList, ArtistInfo
 from app.database_services import DBServices
 from app.auth_services import Auth
+from app.aws_services import AWSServices as awss
 
 
 class Processors(object):
@@ -36,10 +37,16 @@ class Processors(object):
             ds.db_update_artist_info(user_dict=user_dict)
         print('FIN')
 
+    def send_twitter_list_s3(self):
+        ds = DBServices()
+        user_list = ds.get_twitter_list()
+        awss.s3_send_list(user_list=user_list)
+
+
 
 
 
 
 if __name__ == '__main__':
     p = Processors()
-    p.social_update()
+    p.send_twitter_list_s3()

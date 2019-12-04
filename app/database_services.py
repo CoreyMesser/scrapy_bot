@@ -1,4 +1,5 @@
 from datetime import datetime
+import pandas as pd
 from app.database import db_session
 
 
@@ -36,3 +37,18 @@ class DBServices(object):
                    user_dict['twitter'],
                    user_dict['full_path']))
         db.commit()
+
+    def get_twitter_list(self):
+        db = db_session()
+        sql = """
+        SELECT artists from public.artists where artists not like 'None'
+        """
+        return db.execute(sql)
+
+    def df_to_csv(self, data):
+        df = pd.DataFrame(data)
+        df.to_csv()
+
+
+    def get_telegram_list(self):
+        pass

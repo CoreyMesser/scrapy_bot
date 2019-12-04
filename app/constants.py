@@ -13,3 +13,9 @@ class EnvConstants(object):
     CF_A = os.environ.get('CF_A')
     HEADERS = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:70.0) Gecko/20100101 Firefox/70.0'
     ACC_DISABLED = os.environ.get('ACC_DISABLED')
+
+
+class AWSConstants(object):
+    AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
+    BUCKET = os.environ.get('BUCKET')
