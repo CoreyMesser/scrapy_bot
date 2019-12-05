@@ -1,6 +1,8 @@
 from datetime import datetime
 import pandas as pd
 from app.database import db_session
+from app.aws_services import AWSServices
+import s3fs
 
 
 class DBServices(object):
@@ -41,13 +43,15 @@ class DBServices(object):
     def get_twitter_list(self):
         db = db_session()
         sql = """
-        SELECT artists from public.artists where artists not like 'None'
+        SELECT artist_twitter from public.artists where artist_twitter not like 'None'
         """
         return db.execute(sql)
 
-    def df_to_csv(self, data):
+    def df_to_csv_to_s3(self, data):
+        awss = AWSServices()
+        path = awss.assemble_s3_path_twitter()
         df = pd.DataFrame(data)
-        df.to_csv()
+        df.to_csv(path)
 
 
     def get_telegram_list(self):
