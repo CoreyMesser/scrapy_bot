@@ -51,7 +51,7 @@ class DBServices(object):
         awss = AWSServices()
         path = awss.assemble_s3_path_twitter()
         df = pd.DataFrame(data)
-        df.to_csv(path)
+        return df.to_csv()
 
 
     def get_telegram_list(self):

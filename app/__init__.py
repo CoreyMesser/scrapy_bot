@@ -1,6 +1,7 @@
 from app.scraper_services import WatchList, ArtistInfo
 from app.database_services import DBServices
 from app.auth_services import Auth
+from app.aws_services import AWSServices
 
 
 class Processors(object):
@@ -38,9 +39,14 @@ class Processors(object):
 
     def send_twitter_list_s3(self):
         ds = DBServices()
+        awss = AWSServices()
+        print('Pulling latest list')
         user_list = ds.get_twitter_list()
-        ds.df_to_csv_to_s3(data=user_list)
-
+        print('Creating CSV')
+        csv_file = ds.df_to_csv_to_s3(data=user_list)
+        print('Sending CSV to s3')
+        awss.s3_send_list(csv_file=csv_file)
+        print('FIN')
 
 if __name__ == '__main__':
     p = Processors()
