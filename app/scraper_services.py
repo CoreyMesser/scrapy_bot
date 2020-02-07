@@ -14,7 +14,7 @@ class WatchList(scrapy.Spider):
 
     cf_delay = 10
     session = requests.session()
-    session.headers  = []
+    session.headers = []
 
     def get_path(self):
         path = [ec.TARGET_SITE + '/' + ec.PATH_WATCHLIST + '/' + ec.TARGET_USER + '/',
@@ -28,6 +28,8 @@ class WatchList(scrapy.Spider):
                 ec.TARGET_SITE + '/' + ec.PATH_WATCHLIST + '/' + ec.TARGET_USER + '/' + '9' + '/',
                 ec.TARGET_SITE + '/' + ec.PATH_WATCHLIST + '/' + ec.TARGET_USER + '/' + '10' + '/',
                 ec.TARGET_SITE + '/' + ec.PATH_WATCHLIST + '/' + ec.TARGET_USER + '/' + '11' + '/',
+                ec.TARGET_SITE + '/' + ec.PATH_WATCHLIST + '/' + ec.TARGET_USER + '/' + '12' + '/',
+                ec.TARGET_SITE + '/' + ec.PATH_WATCHLIST + '/' + ec.TARGET_USER + '/' + '13' + '/'
         ]
         return path
 

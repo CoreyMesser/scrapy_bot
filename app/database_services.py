@@ -4,6 +4,10 @@ from app.database import db_session
 from app.aws_services import AWSServices
 import s3fs
 
+from app.logger import Logger
+
+_log = Logger().log()
+
 
 class DBServices(object):
 
@@ -23,6 +27,17 @@ class DBServices(object):
         SELECT artist_full_path FROM public.artists
         """)
         return artist_list
+
+    def db_artist_check(self, watch_dict):
+        db = db_session()
+        new_artists_list = []
+        for artist in watch_dict:
+            artist_exists = db.execute("""
+            SELECT artist_full_path FROM public.artists WHERE artist_full_path = '{}'
+            """.format(artist['user_path']))
+            if artist_exists.rowcount == 0:
+                new_artists_list.append(artist)
+        return new_artists_list
 
     def db_update_artist_info(self, user_dict):
         updated_on = datetime.now()

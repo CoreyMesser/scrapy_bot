@@ -3,17 +3,25 @@ from app.database_services import DBServices
 from app.auth_services import Auth
 from app.aws_services import AWSServices
 
+from app.logger import Logger
+
+_log = Logger().log()
+
 
 class Processors(object):
 
-    def initial_add_artists(self):
+    def add_update_artists(self):
         wl = WatchList()
         ds = DBServices()
 
-        print('Scrape Started')
+        _log.info('Scrape Started')
         watch_list = wl.soup_parser()
+        _log.info('Soup Started')
         names_dict = wl.soup_dict(watch_list=watch_list)
-        ds.db_add_artists_names(names_dict=names_dict)
+        _log.info('Comparing')
+        artist_dict = ds.db_artist_check(watch_dict=names_dict)
+        _log.info('Updating DB')
+        ds.db_add_artists_names(names_dict=artist_dict)
         print('FIN')
 
     def login(self):
@@ -50,4 +58,4 @@ class Processors(object):
 
 if __name__ == '__main__':
     p = Processors()
-    p.send_twitter_list_s3()
+    p.add_update_artists()
