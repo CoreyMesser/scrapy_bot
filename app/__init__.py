@@ -3,9 +3,10 @@ from app.database_services import DBServices
 from app.auth_services import Auth
 from app.aws_services import AWSServices
 
-from app.logger import Logger
+from app.logger import LoggerService
 
-_log = Logger().log()
+ls = LoggerService()
+_log = ls.get_logger()
 
 
 class Processors(object):
@@ -22,7 +23,7 @@ class Processors(object):
         artist_dict = ds.db_artist_check(watch_dict=names_dict)
         _log.info('Updating DB')
         ds.db_add_artists_names(names_dict=artist_dict)
-        print('FIN')
+        _log.info('FIN')
 
     def login(self):
         a = Auth()
@@ -35,27 +36,27 @@ class Processors(object):
     def social_update(self):
         ds = DBServices()
         ai = ArtistInfo()
-        print('Artist Update Started')
+        _log.info('Artist Update Started')
         session = self.login()
-        print('Log in Successful')
-        artist_list = ds.db_get_artists()
-        print('Artists List Retreived')
+        _log.info('Log in Successful')
+        artist_list = ds.db_get_artists_social_update()
+        _log.info('Artists List Retreived')
         for user in artist_list:
             user_dict = ai.artist_processor(session=session, user=user)
             ds.db_update_artist_info(user_dict=user_dict)
-        print('FIN')
+        _log.info('FIN')
 
     def send_twitter_list_s3(self):
         ds = DBServices()
         awss = AWSServices()
-        print('Pulling latest list')
+        _log.info('Pulling latest list')
         user_list = ds.get_twitter_list()
-        print('Creating CSV')
+        _log.info('Creating CSV')
         csv_file = ds.df_to_csv_to_s3(data=user_list)
-        print('Sending CSV to s3')
+        _log.info('Sending CSV to s3')
         awss.s3_send_list(csv_file=csv_file)
-        print('FIN')
+        _log.info('FIN')
 
 if __name__ == '__main__':
     p = Processors()
-    p.add_update_artists()
+    p.social_update()

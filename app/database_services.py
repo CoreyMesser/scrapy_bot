@@ -2,11 +2,11 @@ from datetime import datetime
 import pandas as pd
 from app.database import db_session
 from app.aws_services import AWSServices
-import s3fs
 
-from app.logger import Logger
+from app.logger import LoggerService
 
-_log = Logger().log()
+ls = LoggerService()
+_log = ls.get_logger()
 
 
 class DBServices(object):
@@ -25,6 +25,13 @@ class DBServices(object):
         db = db_session()
         artist_list = db.execute("""
         SELECT artist_full_path FROM public.artists
+        """)
+        return artist_list
+
+    def db_get_artists_social_update(self):
+        db = db_session()
+        artist_list = db.execute("""
+        SELECT artist_full_path FROM public.artists ar where ar.artist_twitter is null
         """)
         return artist_list
 

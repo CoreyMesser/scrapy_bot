@@ -5,7 +5,10 @@ import re
 from bs4 import BeautifulSoup
 
 from app.constants import EnvConstants as ec
+from app.logger import LoggerService
 
+ls = LoggerService()
+_log = ls.get_logger()
 
 class WatchList(scrapy.Spider):
     name = 'watchers'
@@ -52,12 +55,12 @@ class WatchList(scrapy.Spider):
     def soup_parser(self):
         raw_watchlist = []
         pathes = self.get_path()
-        print('Pathes Complete')
+        _log.info('Pathes Complete')
         for path in pathes:
             req = self.cf_scrape(path=path)
             soup = BeautifulSoup(req.content, 'html.parser')
             raw_watchlist.append(list(soup.find_all("a", href=re.compile("/user/"))))
-        print('Watchlist Complete')
+        _log.info('Watchlist Complete')
         return raw_watchlist
 
     def soup_dict(self, watch_list):
@@ -67,7 +70,7 @@ class WatchList(scrapy.Spider):
                 user_path = entry.attrs['href']
                 user_name = entry.string
                 watch_dict.append({'user_name': user_name, 'user_path': user_path})
-        print('Dict Complete')
+        _log.info('Dict Complete')
         return watch_dict
 
 
@@ -81,6 +84,7 @@ class ArtistInfo(scrapy.Spider):
         soup = BeautifulSoup(response.text, "html.parser")
         unwatch_link = soup.find_all("a", href=re.compile("/unwatch/"))
         session.get(unwatch_link.attrs['href'])
+        _log.info('User unwatched')
 
     def user_active(self, session, response):
         soup = BeautifulSoup(response.text, "html.parser")

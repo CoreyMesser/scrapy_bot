@@ -1,21 +1,23 @@
 import logging
 
-class Logger(object):
-    def __init__(self):
+
+class LoggerService(object):
+
+    def get_logger(self):
         logging.basicConfig(filename='artlog.log', format='%(asctime)s - %(message)s', level=logging.INFO)
-        self.logger = logging.getLogger()
+        logger = logging.getLogger()
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
+        if logger.handlers:
+            logger.handlers = []
         fh = logging.FileHandler('artlog.log')
         fh.setLevel(logging.DEBUG)
         fh.setFormatter(formatter)
-        self.logger.addHandler(fh)
+        logger.addHandler(fh)
 
         ch = logging.StreamHandler()
         ch.setLevel(logging.DEBUG)
         ch.setFormatter(formatter)
-        self.logger.addHandler(ch)
+        logger.addHandler(ch)
+        return logger
 
-    def log(self):
-        log = self.logger
-        return log
