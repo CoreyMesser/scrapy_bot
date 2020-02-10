@@ -120,3 +120,7 @@ class ArtistInfo(scrapy.Spider):
         user_dict['telegram'] = telegram
         user_dict['twitter'] = twitter
         return user_dict
+
+    def artist_integrity(self, session):
+        # check to see if artist unfollowed.
+        pass
