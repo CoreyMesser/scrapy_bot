@@ -23,6 +23,8 @@ class Processors(object):
         artist_dict = ds.db_artist_check(watch_dict=names_dict)
         _log.info('Updating DB')
         ds.db_add_artists_names(names_dict=artist_dict)
+        _log.info('Checking Unfollows')
+        ds.get_artist_integrity(current_list=names_dict)
         _log.info('FIN')
 
     def login(self):
@@ -57,6 +59,11 @@ class Processors(object):
         awss.s3_send_list(csv_file=csv_file)
         _log.info('FIN')
 
+    def test_check(self):
+        wl = WatchList()
+        ds = DBServices()
+
+
 if __name__ == '__main__':
     p = Processors()
-    p.social_update()
+    p.add_update_artists()
