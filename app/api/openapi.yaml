@@ -75,11 +75,50 @@ components:
     Error:
       properties:
         code:
-          description: Error code.
+          description: A code for the specific error.  Used to help in determining
+            possible root causes of an error.
           type: string
         message:
-          description: A message providing more detail.
+          description: A message providing additional detail for an error.
           type: string
       type: object
     Message:
+      example:
+        level: INFO
+        message: message
+      properties:
+        level:
+          description: A level for the specific message.
+          enum:
+            - INFO
+            - WARN
+            - DEBUG
+          type: string
+        message:
+          description: A message providing additional detail for message.
+          type: string
+      type: object
+    KeyValue:
+      description: A simple key-value pair.
+      example:
+        value: value
+        key: key
+      properties:
+        key:
+          description: A unique key for this pair.
+          type: string
+        value:
+          description: A value for this pair.
+          type: string
+      required:
+        - key
+        - value
+      type: object
+  securitySchemes:
+    jwt:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
+      x-bearerInfoFunc: openapi_server.controllers.security_controller
+
       
