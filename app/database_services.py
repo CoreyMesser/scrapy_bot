@@ -142,3 +142,16 @@ class DBServices(object):
                    user_dict['twitter'],
                    user_dict['full_path']))
         db.commit()
+
+    def db_update_stats(self, stats_dict):
+        db = db_session()
+        prev_watchers = db.execute("""
+        SELECT current_watchers from public.profile_stats""")
+        db.commit()
+        db.execute("""INSERT INTO public.profile_stats (current_watchers, previous_watchers, watching, views, faves,)
+        VALUES ( {}, {}, {}, {}, {})""".format(stats_dict['watchers'],
+                                               prev_watchers,
+                                               stats_dict['watching'],
+                                               stats_dict['faves'],
+                                               stats_dict['views']))
+        db.commit()

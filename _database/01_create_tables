@@ -1,22 +1,25 @@
-CREATE TABLE fa_scrape
+CREATE TABLE profile_stats
 (
-    id SERIAL PRIMARY KEY NOT NULL,
-    cf_token   TEXT,
-    current_watchers INT,
-    previous_watcher INT,
-    created_on TIMESTAMP NOT NULL,
-    updated_on TIMESTAMP
+    id                SERIAL PRIMARY KEY NOT NULL,
+    cf_token          TEXT,
+    current_watchers  INT,
+    previous_watchers INT,
+    watching          INT,
+    views             INT,
+    faves             INT,
+    created_on        TIMESTAMP          NOT NULL,
+    updated_on        TIMESTAMP
 );
 
 CREATE TABLE artists
 (
-    id SERIAL PRIMARY KEY NOT NULL,
-    artist_name  TEXT,
-    follows  BOOL,
-    artist_full_path      TEXT,
-    artist_twitter    TEXT,
-    artist_telegram    TEXT,
-    artist_active BOOL,
-    created_on timestamptz NOT NULL DEFAULT now(),
-    updated_on TIMESTAMP
+    id               SERIAL PRIMARY KEY NOT NULL,
+    artist_name      TEXT,
+    follows          BOOL,
+    artist_full_path TEXT,
+    artist_twitter   TEXT,
+    artist_telegram  TEXT,
+    artist_active    BOOL,
+    created_on       timestamptz        NOT NULL DEFAULT now(),
+    updated_on       TIMESTAMP
 )

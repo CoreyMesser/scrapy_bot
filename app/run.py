@@ -16,7 +16,7 @@ class Processors(object):
         ds = DBServices()
 
         _log.info('Scrape Started')
-        watch_list = wl.soup_parser()
+        watch_list = wl.soup_watchlist_parser()
         _log.info('Soup Started')
         names_dict = wl.soup_dict(watch_list=watch_list)
         _log.info('Comparing')
@@ -26,6 +26,7 @@ class Processors(object):
         _log.info('Checking Unfollows')
         ds.get_artist_integrity(current_list=names_dict)
         _log.info('FIN')
+        return "Watchers have been updated."
 
     def login(self):
         a = Auth()
@@ -47,6 +48,7 @@ class Processors(object):
             user_dict = ai.artist_processor(session=session, user=user)
             ds.db_update_artist_info(user_dict=user_dict)
         _log.info('FIN')
+        return "Social has been updated"
 
     def send_twitter_list_s3(self):
         ds = DBServices()
@@ -58,12 +60,8 @@ class Processors(object):
         _log.info('Sending CSV to s3')
         awss.s3_send_list(csv_file=csv_file)
         _log.info('FIN')
+        return "List has been sent to s3"
 
-    def test_check(self):
-        wl = WatchList()
+    def update_stats(self):
         ds = DBServices()
-#
-#
-# if __name__ == '__main__':
-#     p = Processors()
-#     p.add_update_artists()
+        wl = WatchList()
