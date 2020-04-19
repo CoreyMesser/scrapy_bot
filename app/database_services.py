@@ -20,15 +20,16 @@ class DBServices(object):
             a.append(d)
         return a
 
-    def db_add_artists_names(self, names_dict):
+    def db_add_artists_names(self, names_dict, watch):
         db = db_session()
         heart_beat_counter = 0
+        db_tools = self.db_watch_toolbox(watch=watch)
         for art_entry in names_dict:
             user_name = art_entry['user_name']
             artist_full_path = art_entry['user_path']
             db.execute("""
-            INSERT INTO artists (artist_name, follows, artist_full_path)
-            VALUES ( '{}',{},'{}' )""".format(user_name, True, artist_full_path))
+            INSERT INTO {} (artist_name, {}, artist_full_path)
+            VALUES ( '{}',{},'{}' )""".format(db_tools['table'], db_tools['follows'], user_name, True, artist_full_path))
             db.commit()
             heart_beat_counter += 1
             heartbeat = (heart_beat_counter / 100) % 2
@@ -68,19 +69,18 @@ class DBServices(object):
                 """)
         db.commit()
 
-    def db_get_artists_social_update(self):
+    def db_get_artists_social_update(self, watch):
+        db_tools = self.db_watch_toolbox(watch=watch)
         db = db_session()
-        artist_list = db.execute("""
-        SELECT artist_full_path FROM public.artists ar where ar.artist_twitter is null
+        return db.execute(f"""
+        SELECT artist_full_path FROM {db_tools['table']} where artist_twitter is null
         """)
-        return artist_list
 
     def get_twitter_list(self):
         db = db_session()
-        sql = """
+        return db.execute("""
         SELECT artist_twitter from public.artists where artist_twitter not like 'None'
-        """
-        return db.execute(sql)
+        """)
 
     def df_to_csv_to_s3(self, data):
         awss = AWSServices()
@@ -109,6 +109,33 @@ class DBServices(object):
     def db_get_unfollowers(self):
         db = db_session()
 
+    def db_i_follow_follow_me(self):
+        db = db_session()
+        i_follow = db.execute("""
+        SELECT * FROM watched_artists WHERE follows_me = FALSE""")
+        follows = db.execute("""
+        SELECT * FROM artists WHERE follows = TRUE""")
+        if_df = pd.DataFrame(i_follow)
+        f_df = pd.DataFrame(follows)
+        results = set(if_df[5]).intersection(set(f_df[3]))
+        return results
+
+    def db_set_follow_me(self, results):
+        db = db_session()
+        if len(results) > 0:
+            for user in list(results):
+                _log.info(f"[FOLLOW HARMONY] {user} follows me back!")
+                user = str(user)
+                db.execute(f"""
+                UPDATE watched_artists
+                SET follows_me = TRUE, follows_me_id = (SELECT id FROM artists WHERE artist_full_path = '{user}'), updated_on = now()
+                WHERE artist_full_path = '{user}'""")
+                _log.info(f"[FOLLOW HARMONY] {user} updated!")
+                db.commit()
+        else:
+            _log.info("[FOLLOW HARMONY] No new follow backs.")
+
+
     def get_new_artists(self, current_list, watch):
         """
         takes a current list of users and compares them with an active list of users from the db
@@ -129,8 +156,9 @@ class DBServices(object):
             results = set(cl_df['user_path']).difference(set(dl_df[0]))
         return results, first_time
 
-    def get_artist_integrity(self, current_list):
-        db_list = self.db_get_followers(None)
+    def get_artist_integrity(self, current_list, watch):
+        db_tools = self.db_watch_toolbox(watch=watch)
+        db_list = self.db_get_followers(watch=db_tools)
         cl_df = pd.DataFrame(current_list)
         dl_df = pd.DataFrame(db_list)
         resultalt = set(dl_df[0]).difference(set(cl_df['user_path']))
@@ -172,6 +200,22 @@ class DBServices(object):
                    user_dict['telegram'],
                    user_dict['twitter'],
                    user_dict['full_path']))
+        db.commit()
+
+    def db_update_watching_info(self, user_dict, user_stats):
+        db = db_session()
+        db.execute(f"""
+           UPDATE watched_artists 
+           SET artist_active = {user_dict['active']}, 
+           artist_telegram = '{user_dict['telegram']}', 
+           artist_twitter = '{user_dict['twitter']}',
+           watchers = {user_stats['watchers']},
+           watching = {user_stats['watching']},
+           views = {user_stats['views']},
+           faves = {user_stats['faves']}, 
+           updated_on = now()
+           WHERE artist_full_path = '{user_dict['full_path']}'
+           """)
         db.commit()
 
     def db_update_stats(self, stats_dict):

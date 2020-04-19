@@ -71,21 +71,30 @@ class WatchList(scrapy.Spider):
         :param username:
         :return:
         """
-        user_model = {'views':0,
-                      'faves':0,
-                      'watchers':0,
-                      'watching':0}
         path = self.user_path + username
         soup = self.soup_parser(path=path)
+        return self.scrape_stats(soup)
+
+    def scrape_stats(self, soup):
         stats = list(soup.find_all("div", attrs={'class': 'cell'}))
         watches = list(soup.find_all(href=re.compile("/watchlist/")))
+        user_model = {'views': 0,
+                      'faves': 0,
+                      'watchers': 0,
+                      'watching': 0}
         if len(stats) >= 1 and len(watches) >= 1:
-            user_model['views'] = int(stats[0].contents[2])
-            user_model['faves'] = int(stats[0].contents[10])
+            try:
+                user_model['views'] = int(stats[0].contents[2])
+            except IndexError:
+                _log.error(f"[ERROR][SCRAPE STATS] Tirefire views")
+            try:
+                user_model['faves'] = int(stats[0].contents[10])
+            except IndexError:
+                _log.error(f"[ERROR][SCRAPE STATS] Tirefire faves")
             user_model['watchers'] = self.strip_watcher_values(watches=watches[0].contents[0])
             user_model['watching'] = self.strip_watcher_values(watches=watches[1].contents[0])
         else:
-            user_model = f"[SCRAPE USER] No results found, Username : {username} may be incorrect"
+            _log.error("[ERROR][SCRAPE USER] No stats generated...")
         return user_model
 
     def strip_watcher_values(self, watches):
@@ -113,6 +122,7 @@ class WatchList(scrapy.Spider):
         path_list = []
         while page <= pages:
             path_list.append(core_path + str(page) + '/')
+            page += 1
         return path_list
 
     def soup_watchlist_parser(self, watch):
@@ -123,11 +133,11 @@ class WatchList(scrapy.Spider):
         """
         raw_watchlist = []
         pathes = self.get_path(watch=watch)
-        _log.info('[ADD UPDATE USERS] Paths Complete')
+        _log.info('[ADD UPDATE] Paths Complete')
         for path in pathes:
             soup = self.soup_parser(path)
             raw_watchlist.append(list(soup.find_all("a", href=re.compile("/user/"))))
-        _log.info('[ADD UPDATE USERS] Watchlist Complete')
+        _log.info('[ADD UPDATE] Watchlist Complete')
         return raw_watchlist
 
     def soup_parser(self, path):
@@ -212,6 +222,12 @@ class ArtistInfo(scrapy.Spider):
             telegram_link = None
         return telegram_link, twitter_link
 
+    def artist_stats(self, response):
+        wl = WatchList()
+        soup = BeautifulSoup(response.content, 'html.parser')
+        user_model = wl.scrape_stats(soup=soup)
+        return user_model
+
     def artist_processor(self, session, user):
         """
         main processing tree for artists, assembles path, checks active, assembles dict of social links
@@ -227,4 +243,5 @@ class ArtistInfo(scrapy.Spider):
         telegram, twitter = self.artist_soup_parser(response=response)
         user_dict['telegram'] = telegram
         user_dict['twitter'] = twitter
-        return user_dict
+        user_stats = self.artist_stats(response=response)
+        return user_dict, user_stats

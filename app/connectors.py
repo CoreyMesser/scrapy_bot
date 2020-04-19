@@ -32,7 +32,7 @@ def update_users():
 
 
 def update_social():
-    return pr.social_update()
+    return pr.social_update(None)
 
 
 def send_s3():
@@ -40,3 +40,6 @@ def send_s3():
 
 def update_stats():
     return pr.update_stats()
+
+def update_watching():
+    return pr.add_update_watching()

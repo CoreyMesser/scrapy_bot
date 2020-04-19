@@ -24,9 +24,10 @@ class Processors(object):
         _log.info('[ADD UPDATE USERS] Comparing')
         artist_dict = ds.db_artist_check(watch_dict=names_dict, watch=watched)
         _log.info('[ADD UPDATE USERS] Updating DB')
-        ds.db_add_artists_names(names_dict=artist_dict)
+        ds.db_add_artists_names(names_dict=artist_dict, watch=watched)
         _log.info('[ADD UPDATE USERS] Checking Unfollows')
-        ds.get_artist_integrity(current_list=names_dict)
+        ds.get_artist_integrity(current_list=names_dict, watch=watched)
+        self.social_update(watch=watched)
         _log.info('[ADD UPDATE USERS] FIN')
         return "Watchers have been updated."
 
@@ -38,18 +39,21 @@ class Processors(object):
             session = a.session
         return session
 
-    def social_update(self):
+    def social_update(self, watch):
         ds = DBServices()
         ai = ArtistInfo()
         _log.info('[SOCIAL UPDATE] Artist Update Started')
         session = self.login()
         _log.info('[SOCIAL UPDATE] Log in Successful')
-        artist_list = ds.db_get_artists_social_update()
+        artist_list = ds.db_get_artists_social_update(watch=watch)
         _log.info('[SOCIAL UPDATE] Artists List Retreived')
         for user in artist_list:
             _log.info('[SOCIAL UPDATE] Processing artist')
-            user_dict = ai.artist_processor(session=session, user=user)
-            ds.db_update_artist_info(user_dict=user_dict)
+            user_dict, user_stats = ai.artist_processor(session=session, user=user)
+            if watch == ec.PATH_WATCHLIST:
+                ds.db_update_artist_info(user_dict=user_dict)
+            else:
+                ds.db_update_watching_info(user_dict=user_dict, user_stats=user_stats)
             _log.info('[SOCIAL UPDATE] Artist Processed')
         _log.info('[SOCIAL UPDATE] FIN')
         return "Social has been updated"
@@ -81,18 +85,20 @@ class Processors(object):
         ds = DBServices()
         watching = ec.PATH_WATCHING
 
-        _log.info('[ADD UPDATE USERS] Scrape Started')
+        _log.info('[ADD UPDATE WATCHING] Scrape Started')
         watch_list = wl.soup_watchlist_parser(watch=watching)
-        _log.info('[ADD UPDATE USERS] Soup Started')
+        _log.info('[ADD UPDATE WATCHING] Soup Started')
         names_dict = wl.soup_dict(watch_list=watch_list)
-        _log.info('[ADD UPDATE USERS] Comparing')
+        _log.info('[ADD UPDATE WATCHING] Comparing')
 
         artist_dict = ds.db_artist_check(watch_dict=names_dict, watch=watching)
-        _log.info('[ADD UPDATE USERS] Updating DB')
+        _log.info('[ADD UPDATE WATCHING] Updating DB')
 
-        ds.db_add_artists_names(names_dict=artist_dict)
-        _log.info('[ADD UPDATE USERS] Checking Unfollows')
-        ds.get_artist_integrity(current_list=names_dict)
+        ds.db_add_artists_names(names_dict=artist_dict, watch=watching)
+        _log.info('[ADD UPDATE WATCHING] Checking Follow Harmony')
+        results = ds.db_i_follow_follow_me()
+        ds.db_set_follow_me(results=results)
+        self.social_update(watch=watching)
         _log.info('[ADD UPDATE USERS] FIN')
         return "Watchers have been updated."
 
