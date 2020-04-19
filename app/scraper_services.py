@@ -14,10 +14,18 @@ _log = ls.get_logger()
 class HealthChecks(object):
 
     def ping_site(self):
+        """
+        simply pings tirefire to see if still burning
+        :return:
+        """
         site_ping = requests.get(url=ec.TARGET_SITE)
         return {'code': site_ping.status_code, 'message': site_ping.url}
 
     def ping_user(self):
+        """
+        simply pings user to see if exists
+        :return:
+        """
         user_ping = requests.get(url=ec.TARGET_SITE + '/' + ec.PATH_USER + '/' + ec.TARGET_USER)
         return {'code': user_ping.status_code, 'message': user_ping.url}
 
@@ -30,8 +38,13 @@ class WatchList(scrapy.Spider):
     session.headers = []
     user_path = ec.TARGET_SITE + '/' + ec.PATH_USER + '/'
     user_watch_path = ec.TARGET_SITE + '/' + ec.PATH_WATCHLIST + '/' + ec.TARGET_USER + '/'
+    user_watching_path = ec.TARGET_SITE + '/' + ec.PATH_WATCHING + '/' + ec.TARGET_USER + '/'
 
     def cf_get_tokens(self):
+        """
+        gets login token
+        :return:
+        """
         dblist = 'dblist_sql'
         if dblist:
             sql = 'sql'
@@ -43,11 +56,21 @@ class WatchList(scrapy.Spider):
         pass
 
     def cf_scrape(self, path):
+        """
+        scraper service
+        :param path:
+        :return:
+        """
         scraper = cfscrape.create_scraper(delay=self.cf_delay)
         req = scraper.get(path)
         return req
 
     def scrape_user(self, username: str):
+        """
+        scrapes user stats
+        :param username:
+        :return:
+        """
         user_model = {'views':0,
                       'faves':0,
                       'watchers':0,
@@ -62,50 +85,67 @@ class WatchList(scrapy.Spider):
             user_model['watchers'] = self.strip_watcher_values(watches=watches[0].contents[0])
             user_model['watching'] = self.strip_watcher_values(watches=watches[1].contents[0])
         else:
-            user_model = f"No results found, Username : {username} may be incorrect"
+            user_model = f"[SCRAPE USER] No results found, Username : {username} may be incorrect"
         return user_model
 
     def strip_watcher_values(self, watches):
+        """
+        since its a tirefire of a site they mangled their stats, this strips the number out of the string
+        :param watches:
+        :return:
+        """
         return int(re.findall(r'[0-9]+', watches)[0])
 
-    def calculate_watch_num_pages(self):
+    def calculate_watch_num_pages(self, watchers):
         """calculates number of watch pages"""
-        total_watchers = 0
-        return int(total_watchers / 200)
+        return int(watchers / 200)
 
-    def get_path(self):
-        path = [ec.TARGET_SITE + '/' + ec.PATH_WATCHLIST + '/' + ec.TARGET_USER + '/',
-                ec.TARGET_SITE + '/' + ec.PATH_WATCHLIST + '/' + ec.TARGET_USER + '/' + '2' + '/',
-                ec.TARGET_SITE + '/' + ec.PATH_WATCHLIST + '/' + ec.TARGET_USER + '/' + '3' + '/',
-                ec.TARGET_SITE + '/' + ec.PATH_WATCHLIST + '/' + ec.TARGET_USER + '/' + '4' + '/',
-                ec.TARGET_SITE + '/' + ec.PATH_WATCHLIST + '/' + ec.TARGET_USER + '/' + '5' + '/',
-                ec.TARGET_SITE + '/' + ec.PATH_WATCHLIST + '/' + ec.TARGET_USER + '/' + '6' + '/',
-                ec.TARGET_SITE + '/' + ec.PATH_WATCHLIST + '/' + ec.TARGET_USER + '/' + '7' + '/',
-                ec.TARGET_SITE + '/' + ec.PATH_WATCHLIST + '/' + ec.TARGET_USER + '/' + '8' + '/',
-                ec.TARGET_SITE + '/' + ec.PATH_WATCHLIST + '/' + ec.TARGET_USER + '/' + '9' + '/',
-                ec.TARGET_SITE + '/' + ec.PATH_WATCHLIST + '/' + ec.TARGET_USER + '/' + '10' + '/',
-                ec.TARGET_SITE + '/' + ec.PATH_WATCHLIST + '/' + ec.TARGET_USER + '/' + '11' + '/',
-                ec.TARGET_SITE + '/' + ec.PATH_WATCHLIST + '/' + ec.TARGET_USER + '/' + '12' + '/',
-                ec.TARGET_SITE + '/' + ec.PATH_WATCHLIST + '/' + ec.TARGET_USER + '/' + '13' + '/'
-                ]
-        return path
+    def get_path(self, watch):
+        """
+        gets number of users, calculates pages, and builds a list of paths to consumption
+        :param watch:
+        :return:
+        """
+        user_model = self.scrape_user(username=ec.TARGET_USER)
+        pages = self.calculate_watch_num_pages(watchers=user_model['watchers'])
+        core_path = ec.TARGET_SITE + '/' + watch + '/' + ec.TARGET_USER + '/'
+        page = 1
+        path_list = []
+        while page <= pages:
+            path_list.append(core_path + str(page) + '/')
+        return path_list
 
-    def soup_watchlist_parser(self):
+    def soup_watchlist_parser(self, watch):
+        """
+        uses the path list to strip out the users from each page
+        :param watch:
+        :return:
+        """
         raw_watchlist = []
-        pathes = self.get_path()
-        _log.info('Pathes Complete')
+        pathes = self.get_path(watch=watch)
+        _log.info('[ADD UPDATE USERS] Paths Complete')
         for path in pathes:
             soup = self.soup_parser(path)
             raw_watchlist.append(list(soup.find_all("a", href=re.compile("/user/"))))
-        _log.info('Watchlist Complete')
+        _log.info('[ADD UPDATE USERS] Watchlist Complete')
         return raw_watchlist
 
     def soup_parser(self, path):
+        """
+        soup parser service
+        :param path:
+        :return:
+        """
         req = self.cf_scrape(path=path)
         soup = BeautifulSoup(req.content, 'html.parser')
         return soup
 
     def soup_dict(self, watch_list):
+        """
+        creates a dictionary out of the cleaned usernames
+        :param watch_list:
+        :return:
+        """
         watch_dict = []
         for chunk in watch_list:
             for entry in chunk:
@@ -120,25 +160,45 @@ class ArtistInfo(scrapy.Spider):
     name = "watchers"
 
     def assemble_path(self, user):
+        """
+        path assembler, pass in username and returns a completed path for consumption
+        :param user:
+        :return:
+        """
         return ec.TARGET_SITE + '/' + user
 
     def unwatch_user(self, session, response):
+        """
+        unwatches user from tirefire
+        :param session:
+        :param response:
+        :return:
+        """
         soup = BeautifulSoup(response.text, "html.parser")
         unwatch_link = soup.find_all("a", href=re.compile("/unwatch/"))
         session.get(unwatch_link.attrs['href'])
-        _log.info('User unwatched')
+        _log.info('[ARTIST INFO] User unwatched')
 
     def user_active(self, session, response):
+        """
+        checks to see if the user is active or inactive returns bool
+        :param session:
+        :param response:
+        :return:
+        """
+        user_active = True
         soup = BeautifulSoup(response.text, "html.parser")
         user_check = soup.title.string
         if user_check == ec.ACC_DISABLED:
             user_active = False
-            # self.unwatch_user(session=session, response=response)
-        else:
-            user_active = True
         return user_active
 
     def artist_soup_parser(self, response):
+        """
+        strips out twitter and telegram links from user's profile
+        :param response:
+        :return:
+        """
         soup = BeautifulSoup(response.content, 'html.parser')
         try:
             tw_link = soup.find("a", href=re.compile("http://www.twitter.com/"))
@@ -153,6 +213,12 @@ class ArtistInfo(scrapy.Spider):
         return telegram_link, twitter_link
 
     def artist_processor(self, session, user):
+        """
+        main processing tree for artists, assembles path, checks active, assembles dict of social links
+        :param session:
+        :param user:
+        :return:
+        """
         user_dict = {}
         user_dict['full_path'] = user[0]
         path = self.assemble_path(user=user_dict['full_path'])
