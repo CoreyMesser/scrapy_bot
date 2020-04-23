@@ -27,9 +27,9 @@ class DBServices(object):
         for art_entry in names_dict:
             user_name = art_entry['user_name']
             artist_full_path = art_entry['user_path']
-            db.execute("""
-            INSERT INTO {} (artist_name, {}, artist_full_path)
-            VALUES ( '{}',{},'{}' )""".format(db_tools['table'], db_tools['follows'], user_name, True, artist_full_path))
+            db.execute(f"""
+            INSERT INTO {db_tools['table']} (artist_name, {db_tools['follows']}, artist_full_path)
+            VALUES ( '{user_name}',{True},'{artist_full_path}' )""")
             db.commit()
             heart_beat_counter += 1
             heartbeat = (heart_beat_counter / 100) % 2
@@ -40,7 +40,7 @@ class DBServices(object):
     def db_get_artist(self, user, watch):
         db = db_session()
         results = db.execute(f"""
-            SELECT * FROM {watch['table']} WHERE artist_full_path = '{user}'
+            SELECT * FROM {watch['table']} WHERE artist_full_path = '{user['user_path']}'
             """)
         return results
 
@@ -99,7 +99,7 @@ class DBServices(object):
         """
         db = db_session()
         artist_list = db.execute(f"""
-        SELECT artist_full_path FROM {watch['table']} WHERE {watch['follows']} = True
+        SELECT artist_name, artist_full_path FROM {watch['table']} WHERE {watch['follows']} = True
         """)
         return artist_list
 
@@ -153,7 +153,15 @@ class DBServices(object):
             return current_list, first_time
         else:
             _log.info("Getting New Artists")
-            results = set(cl_df['user_path']).difference(set(dl_df[0]))
+            user_path = set(cl_df['user_path']).difference(set(dl_df[1]))
+            user_name = set(cl_df['user_name']).difference(set(dl_df[0]))
+            results = []
+            for name in user_name:
+                nl = name.lower()
+                for path in user_path:
+                    ps = path.split('/')[-2]
+                    if nl == ps:
+                        results.append({'user_name': name, 'user_path': path})
         return results, first_time
 
     def get_artist_integrity(self, current_list, watch):
@@ -233,7 +241,7 @@ class DBServices(object):
     def db_watch_toolbox(self, watch):
         db_dict = {}
         if watch == ec.PATH_WATCHLIST:
-            db_dict = {'table': 'artist',
+            db_dict = {'table': 'artists',
                        'follows': 'follows'}
         else:
             db_dict = {'table': 'watched_artists',
