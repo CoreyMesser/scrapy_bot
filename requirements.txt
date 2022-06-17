@@ -5,7 +5,7 @@
 SQLAlchemy == 1.3.13
 
 # scrapy_bot/app/scraper_services.py: 1
-Scrapy == 1.8.0
+Scrapy == 2.6.1
 
 # scrapy_bot/app/auth_services.py: 4
 # scrapy_bot/app/scraper_services.py: 5
