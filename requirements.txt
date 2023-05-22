@@ -26,4 +26,4 @@ pandas == 1.0.1
 
 # scrapy_bot/app/auth_services.py: 1
 # scrapy_bot/app/scraper_services.py: 3
-requests == 2.22.0
+requests == 2.31.0
